@@ -1,0 +1,220 @@
+---
+title: "Whites and Blacks Political Affiliation"
+author: Advait Rajagopal
+date: April 27, 2017
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
+                      echo=TRUE, warning=FALSE, message=FALSE)
+```
+## Getting the Data
+GSS Data from <http://gss.norc.org>.
+
+```{r }
+#Read and examine data
+#rm(list = ls())
+#getwd()
+setwd("/Users/Advait/Desktop/New_School/Spring17/GSS_experiments/General_Social_Survey_experiments/race_party_exp")
+#
+library(foreign)
+library(dplyr)
+
+#Use this to read original data, but I have written a csv with only the relevant variables for this poster
+#data <- read.dta("GSS7216_R1a.dta")
+
+#Import csv which was written inorder to avoid importing the giant GSS dataset every time
+test <- read.csv("race_party.csv", header = T,sep = ",", row.names = 1)
+
+#Check the original order of levels is in alphabetic order
+#this does not make sense for plots
+print(levels(test$data.partyid))
+#test$data.partyid[50:70]
+#Reorder factor levels to match original data
+test$data.partyid <- factor(test$data.partyid, 
+                            levels(test$data.partyid)[c(7,4,1,3,2,5,8,6)])
+print(levels(test$data.partyid))
+#test$data.partyid[50:70]
+#factor levels fixed.
+
+#create the dataframe that I'm going to be working with
+df_race_party <- test
+
+```
+
+```{r }
+#filter white people
+#calculate proportion of white voters of each type
+df_white <- df_race_party %>%
+                filter(data.race == "white") %>%
+                group_by(data.partyid) %>%
+                summarize(prop_white = (n()/50085))
+
+#filter black people
+#calculate proportion of black voters of each type
+df_black <- df_race_party %>%
+                filter(data.race == "black") %>%
+                group_by(data.partyid) %>%
+                summarize(prop_black = (n()/8711))
+
+#Create dataframe with necesary info
+df_plot_raceparty <- data.frame(party = df_black$data.partyid,
+                                prop_white = df_white$prop_white,
+                                lower_white = df_white$prop_white - 
+                                  (2*sqrt((df_white$prop_white)*(1 - df_white$prop_white)))/50085,
+                                upper_white = df_white$prop_white + 
+                                  (2*sqrt((df_white$prop_white)*(1 - df_white$prop_white)))/50085,
+                                prop_black = df_black$prop_black,
+                                lower_black = df_black$prop_black - 
+                                  (2*sqrt((df_black$prop_black)*(1 - df_black$prop_black)))/8711,
+                                upper_black = df_black$prop_black + 
+                                  (2*sqrt((df_black$prop_black)*(1 - df_black$prop_black)))/8711)
+
+#Create vector to aid plots
+party <- c("StrongDem", "WeakDem", "Indep/Dem", 
+           "Independent",
+           "Indep/Rep","WeakRep","StrongRep", "Other")
+```
+
+## Plots
+
+
+Plot proportion of white and black voters in separate plots
+```{r , echo=FALSE}
+par(mar = c(3,4.3,5,2.2) + 0.1,
+    col = "gray",
+    mfcol = c(1,2))
+
+#White people Plots
+plot(df_plot_raceparty$prop_white,1:8,
+     xlim = c(0,0.4),
+     pch = 16,
+     cex = 0.7,
+     yaxt = "n",  
+     ylab = "",
+     xlab = "",
+     col = "black",
+     xaxt = "n",
+     main = "Proportion of White Voters",
+     cex.main = 0.7)
+grid(nx = NA, ny = NULL)
+axis(2, 
+     at = c(1:8),
+     labels = paste(party),
+     las = 2, 
+     lwd.tick = 0.5,
+     cex.axis = 0.7, 
+     col = "gray")
+axis(1, 
+     at = (seq(0,0.4,length.out = 9)),
+     labels = (seq(0,0.4,length.out = 9)), 
+     col.ticks = "gray", 
+     lwd.tick = 0.5, 
+     cex.axis = 0.5,
+     col = "gray")
+text(x = df_plot_raceparty$prop_white,
+     y = 1:8,
+     labels = paste(round(df_plot_raceparty$prop_white, 3)),
+     pos = 3,
+     cex = 0.5,
+     col = "black")
+
+#Black people plots
+plot(df_plot_raceparty$prop_black,1:8,
+     xlim = c(0,0.4),
+     pch = 16,
+     cex = 0.7,
+     yaxt = "n",  
+     ylab = "",
+     xlab = "",
+     col = "black",
+     xaxt = "n",
+     main = "Proportion of Black Voters",
+     cex.main = 0.7)
+grid(nx = NA, ny = NULL)
+axis(2, 
+     at = c(1:8),
+     labels = paste(party),
+     las = 2, 
+     lwd.tick = 0.5,
+     cex.axis = 0.7, 
+     col = "gray")
+axis(1, 
+     at = (seq(0,0.4,length.out = 9)),
+     labels = (seq(0,0.4,length.out = 9)), 
+     col.ticks = "gray", 
+     lwd.tick = 0.5, 
+     cex.axis = 0.5,
+     col = "gray")
+text(x = df_plot_raceparty$prop_black,
+     y = 1:8,
+     labels = paste(round(df_plot_raceparty$prop_black, 3)),
+     pos = 3,
+     cex = 0.5,
+     col = "black")
+
+
+
+```
+
+Plot the proportions of voters on the same plot to facilitate comparison
+```{r , echo=FALSE}
+
+par(mar = c(2.5,4.5,2.5,3),
+    col = "gray")
+plot(df_plot_raceparty$prop_white,1:8,
+     xlim = c(0,0.4),
+     pch = 1,
+     cex = 1,
+     yaxt = "n",  
+     ylab = "",
+     xlab = "",
+     col = "black",
+     xaxt = "n",
+     main = "Blacks and Whites Political Affiliation",
+     cex.main = 0.7)
+grid(nx = NA, ny = NULL)
+axis(2, 
+     at = c(1:8),
+     labels = paste(party),
+     las = 2, 
+     lwd.tick = 0.5,
+     cex.axis = 0.7, 
+     col = "gray")
+axis(1, 
+     at = (seq(0,0.4,length.out = 9)),
+     labels = (seq(0,0.4,length.out = 9)), 
+     col.ticks = "gray", 
+     lwd.tick = 0.5, 
+     cex.axis = 0.5,
+     col = "gray")
+text(x = df_plot_raceparty$prop_white,
+     y = 1:8,
+     labels = paste(round(df_plot_raceparty$prop_white, 3)),
+     pos = 3,
+     cex = 0.5,
+     col = "black")
+points(df_plot_raceparty$prop_black,1:8,
+       pch = 16,
+       cex = 1,
+       col = "black")
+text(x = df_plot_raceparty$prop_black,
+     y = 1:8,
+     labels = paste(round(df_plot_raceparty$prop_black, 3)),
+     pos = 1,
+     cex = 0.5,
+     col = "black")
+legend('topright', 
+       legend = c("Black", "White"), 
+       col = "black",
+       pch = c(16,1),
+       cex = 0.7,
+       bty = 'n',
+       text.col = "black")
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
