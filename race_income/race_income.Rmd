@@ -1,5 +1,5 @@
 ---
-title: "race_income"
+title: "White and Black earning brackets"
 author: Advait Rajagopal
 date: April 29, 2017
 output: pdf_document
@@ -17,7 +17,7 @@ knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
 
 ```{r}
 rm(list = ls())
-setwd("/Users/Advait/Desktop/New_School/Spring17/GSS_experiments/race_income")
+setwd("/Users/Advait/Desktop/New_School/Spring17/GSS_experiments/GSS_experiments/race_income")
 getwd()
 #Load packages
 library(foreign)
